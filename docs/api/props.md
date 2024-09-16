@@ -1,12 +1,37 @@
-## appendToBody <Badge text="v3.7.0+" />
+## appendTo <Badge text="v3.14.0+" />
+
+Appends the dropdown menu to the specified element.
+
+Accepts a `string` that will be used as a selector with `document.querySelector(selector)`,
+or you may provide an `HTMLElement` directly.
+
+```vue
+<!-- using a selector -->
+<v-select :append-to="#root" />
+<!-- using an element -->
+<v-select :append-to="document.body" />
+```
+
+See [Dropdown Position](../guide/positioning.md) for more details.
+
+```js
+appendTo: {
+  type: [String, HTMLElement]
+},
+```
+
+## appendToBody <Badge type="warning" text="Deprecated in v3.14" /> <Badge text="v3.7.0+" />
+
+<strong>Use [appendTo](#appendto) instead.</strong>
 
 Append the dropdown element to the end of the body
 and size/position it dynamically. Use it if you have
 overflow or z-index issues.
 
-See [Dropdown Position](../guide/positioning.md) for more details.
-
 ```js
+/**
+ * @deprecated use {@link appendTo}
+ */
 appendToBody: {
     type: Boolean,
     default: false
@@ -189,7 +214,7 @@ disabled: {
 
 ## dropdownShouldOpen <Badge text="v3.12.0+" />
 
-Determines whether the dropdown should open. Used 
+Determines whether the dropdown should open. Used
 for overriding the default dropdown behaviour. Receives
 the vue-select instance as the single argument to the function.
 
@@ -250,7 +275,7 @@ if the option should be displayed.
 filterBy: {
   type: Function,
   default(option, label, search) {
-    return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
+    return (label || '').toLocaleLowerCase().indexOf(search.toLocaleLowerCase()) > -1
   }
 },
 ```

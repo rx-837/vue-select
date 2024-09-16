@@ -1,5 +1,7 @@
-import { selectWithProps } from '../helpers'
+import { mountDefault, selectWithProps } from '../helpers'
 import OpenIndicator from '../../src/components/OpenIndicator'
+import { mount } from '@vue/test-utils'
+import VueSelect from '../../src/components/Select.vue'
 
 const preventDefault = jest.fn()
 
@@ -92,7 +94,7 @@ describe('Toggling Dropdown', () => {
     })
 
     Select.vm.open = true
-    Select.find({ ref: 'search' }).trigger('blur')
+    Select.findComponent({ ref: 'search' }).trigger('blur')
 
     expect(Select.vm.open).toEqual(false)
   })
@@ -158,9 +160,9 @@ describe('Toggling Dropdown', () => {
     expect(Select.vm.open).toEqual(true)
     await Select.vm.$nextTick()
 
-    expect(Select.contains('.vs__dropdown-menu')).toBeFalsy()
-    expect(Select.contains('.vs__dropdown-option')).toBeFalsy()
-    expect(Select.contains('.vs__no-options')).toBeFalsy()
+    expect(Select.find('.vs__dropdown-menu').exists()).toBeFalsy()
+    expect(Select.find('.vs__dropdown-option').exists()).toBeFalsy()
+    expect(Select.find('.vs__no-options').exists()).toBeFalsy()
     expect(Select.vm.stateClasses['vs--open']).toBeFalsy()
   })
 
@@ -168,7 +170,7 @@ describe('Toggling Dropdown', () => {
     const Select = selectWithProps({
       noDrop: true,
     })
-    expect(Select.contains(OpenIndicator)).toBeFalsy()
+    expect(Select.findComponent(OpenIndicator).exists()).toBeFalsy()
   })
 
   it('should not add the searchable state class when noDrop is true', () => {
@@ -197,5 +199,93 @@ describe('Toggling Dropdown', () => {
 
     expect(Select.classes('vs--open')).toBeTruthy()
     expect(Select.find('.vs__dropdown-menu li')).toBeTruthy()
+  })
+})
+
+describe('Appending dropdown to containers', () => {
+  it('can append the dropdown to the body', async () => {
+    const Select = mount(VueSelect, {
+      propsData: { appendToBody: true },
+      attachTo: document.body,
+    })
+
+    Select.vm.open = true
+    await Select.vm.$nextTick()
+
+    expect(document.body.children.length).toEqual(2)
+    expect(document.body.children[0]).toBe(Select.vm.$el)
+    expect(document.body.children[1]).toBe(Select.vm.$refs.dropdownMenu)
+
+    Select.destroy()
+  })
+
+  it('can append the dropdown to a custom element via string', async () => {
+    const div = document.createElement('div')
+    div.id = 'root'
+    document.body.appendChild(div)
+
+    const Select = mount(VueSelect, {
+      propsData: { appendTo: '#root' },
+      attachTo: document.body,
+    })
+
+    Select.vm.open = true
+    await Select.vm.$nextTick()
+
+    expect(document.body.children.length).toEqual(2)
+    expect(document.body.children[1]).toBe(Select.vm.$el)
+    expect(div.children[0]).toBe(Select.vm.$refs.dropdownMenu)
+
+    Select.destroy()
+    div.remove()
+  })
+
+  it('validates that when the appendTo prop is provided an object, that object must have the appendChild method', () => {
+    //  Given
+    const invalidObject = {}
+    const validObject = { appendChild: () => {} }
+    const validHtmlElement = document.createElement('div')
+    //  When
+    const validate = VueSelect.props.appendTo.validator
+    //  Then
+    expect(validate(invalidObject)).toBeFalsy()
+    expect(validate(validObject)).toBeTruthy()
+    expect(validate(validHtmlElement)).toBeTruthy()
+  })
+
+  it('can append the dropdown to a custom element by providing the element', async () => {
+    const div = document.createElement('div')
+    div.id = 'root'
+    document.body.appendChild(div)
+
+    const Select = mount(VueSelect, {
+      propsData: { appendTo: document.querySelector('#root') },
+      attachTo: document.body,
+    })
+
+    Select.vm.open = true
+    await Select.vm.$nextTick()
+
+    expect(document.body.children.length).toEqual(2)
+    expect(document.body.children[1]).toBe(Select.vm.$el)
+    expect(div.children[0]).toBe(Select.vm.$refs.dropdownMenu)
+
+    Select.destroy()
+    div.remove()
+  })
+
+  it('will not append the dropdown unless appendToBody or appendTo has been set', async () => {
+    const Select = mount(VueSelect, {
+      propsData: { appendToBody: false },
+      attachTo: document.body,
+    })
+
+    Select.vm.open = true
+    await Select.vm.$nextTick()
+
+    expect(document.body.children.length).toEqual(1)
+    expect(document.body.children[0]).toBe(Select.vm.$el)
+
+    Select.destroy()
   })
 })
